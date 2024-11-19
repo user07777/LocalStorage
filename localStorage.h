@@ -7,71 +7,218 @@
 #include <random>
 #include <fstream>
 
-namespace localStorage{
 
-    std::string appData_() {
-        char path[MAX_PATH];
+class localStorage {
+public:
+    inline std::string genSalt(int length) {
+#ifdef _M_IX86
+        //Junk
+        __asm {
+            xor eax, eax
+            mov eax, 0x400000 ^ 0xc20
+            add eax, 0x400000 ^ 0xc30
+            sub eax, 0x400000 ^ 0xc40
+        }
 
-        if (!GetModuleFileNameA(NULL, path, MAX_PATH)) {
-            std::cerr << "GetModuleFileNameA: " << GetLastError() << "\n";
+#endif
+
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(0, 255);
+        std::ostringstream oss;
+
+        for (int i = 0; i < length; ++i) {
+
+#ifdef _M_IX86
+            //Junk
+            __asm {
+                mov ecx, 0x400000 ^ 0xc40
+                xor ecx, 0x400000 ^ 0xc350
+                inc ecx
+                dec ecx
+            }
+#endif      
+
+            oss << std::hex << std::setw(2) << std::setfill('0') << dis(gen);
+#ifdef _M_IX86
+            //Junk
+            __asm {
+                push eax
+                xor eax, eax
+                pop eax
+            }
+#endif
+        }
+#ifdef _M_IX86
+        __asm {
+            //Junk
+            mov eax, 0x4000 ^ 0xc350
+            add eax, 0x4000 ^ 0xc340
+            sub eax, 0x4000 ^ 0xc330
+        }
+#endif      
+
+        return oss.str();
+    }
+
+    inline std::string enc(std::string str, std::string key) {
+        std::ostringstream oss;
+        int len = key.length();
+
+        if (len == 0) {
+            return "";
+        }
+        std::string salt = genSalt(30);
+
+#ifdef _M_IX86
+        __asm {
+            xor eax, eax
+            mov eax, 0x400000 ^ 0xc250
+            add eax, 0x400000 ^ 0xc260
+            sub eax, 0x400000 ^ 0xc280
+            push eax
+            pop eax
+        }
+#endif
+
+        oss << salt;
+
+        for (int i = 0; i < str.size(); ++i) {
+
+#ifdef _M_IX86
+            __asm {
+                mov ebx, 0x400000 ^ 0xc450
+                xor ebx, 0x400000 ^ 0xc455
+                add ebx, 0x400000 ^ 0xc460
+                push ebx
+                pop ebx
+            }
+#endif
+
+            unsigned char hex = str[i] ^ key[i % len];
+            oss << std::hex << std::setw(2) << std::setfill('0') << (int)hex;
+
+#ifdef _M_IX86
+            __asm {
+                mov ecx, 0x400000 ^ 0xc390
+                xor ecx, 0x400000 ^ 0xc370
+                inc ecx
+                dec ecx
+                push ecx
+                pop ecx
+            }
+#endif
+        }
+#ifdef _M_IX86
+        __asm {
+            mov edx, 0x400000 ^ 0xc350
+            xor edx, 0x400000 ^ 0xc450
+            add edx, 0x400000 ^ 0xc550
+            sub edx, 0x400000 ^ 0xc650
+            push edx
+            pop edx
+        }
+#endif
+        return oss.str();
+    }
+
+    inline std::string dec(std::string str, std::string key) {
+        if (key.empty() || str.empty() || str.size() % 2 != 0) {
             return "";
         }
 
-        char sh[MAX_PATH];
-        if (SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, sh) != S_OK) {
-            std::cerr << "SHGetFolderPathA: " << GetLastError() << "\n";
-            return "";
+        std::string result;
+        int len = key.length();
+
+#ifdef _M_IX86
+        __asm {
+            xor eax, eax
+            mov eax, 0x4000 ^ 0xc350
+            add eax, 0x4000 ^ 0xc250
+            sub eax, 0x4000 ^ 0xc150
+            push eax
+            pop eax
+        }
+#endif
+
+        for (int i = 60; i < str.size(); i += 2) {
+#ifdef _M_IX86
+            __asm {
+                mov ebx, 0x4000 ^ 0xc50
+                xor ebx, 0x4000 ^ 0xc150
+                add ebx, 0x4000 ^ 0xc250
+                push ebx
+                pop ebx
+            }
+#endif
+
+            std::string hex = str.substr(i, 2);
+            unsigned char txt = static_cast<unsigned char>(std::stoi(hex, nullptr, 16));
+
+            result += static_cast<char>(txt ^ key[((i - 60) / 2) % len]);
+
+#ifdef _M_IX86
+            __asm {
+                mov ecx, 0x4000 ^ 0xc705
+                xor ecx, 0x4000 ^ 0xc710
+                inc ecx
+                dec ecx
+                push ecx
+                pop ecx
+            }
+#endif
         }
 
-        std::string appData = std::string(sh) + "\\localStorage";
-        if (!CreateDirectoryA(appData.c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
-            std::cerr << "CreateDirectoryA: " << GetLastError() << "\n";
-            return "";
+#ifdef _M_IX86
+        __asm {
+            mov edx, 0x4000 ^ 0xc3150
+            xor edx, 0x4000 ^ 0xc3250
+            add edx, 0x4000 ^ 0xc3350
+            sub edx, 0x4000 ^ 0xc3450
+            push edx
+            pop edx
         }
+#endif
 
-        return appData + "\\" + std::string(strrchr(path, '\\') + 1);
-
+        return result;
     }
 
 
-    bool save(std::string name, std::string val) {
+    inline void save(std::string key, std::string str) {
+        strs.push_back(std::make_pair(key+":", str));
+    }
+    virtual bool saveExe() {
         char path[MAX_PATH];
 
         if (!GetModuleFileNameA(NULL, path, MAX_PATH)) {
-            std::cerr << "GetModuleFileNameA: " << GetLastError() << "\n";
             return false;
         }
         std::string path2 = appData_();
 
         if (!CopyFileA(path, path2.c_str(), FALSE)) {
-            std::cerr << "CopyFileA: " << GetLastError() << "\n";
             return false;
         }
 
-        HANDLE f = CreateFileA(path2.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        HANDLE f = CreateFileA(path2.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
         if (f == INVALID_HANDLE_VALUE) {
-            std::cerr << "CreateFileA: " << GetLastError() << "\n";
             return false;
         }
 
         DWORD sz = GetFileSize(f, NULL);
         if (sz == INVALID_FILE_SIZE) {
-            std::cerr << "GetFileSize: " << GetLastError() << "\n";
             CloseHandle(f);
             return false;
         }
 
         LPVOID data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sz);
         if (data == NULL) {
-            std::cerr << "HeapAlloc: " << GetLastError() << "\n";
             CloseHandle(f);
             return false;
         }
 
         DWORD bytesRead;
         if (!ReadFile(f, data, sz, &bytesRead, NULL) || bytesRead != sz) {
-            std::cerr << "ReadFile: " << GetLastError() << "\n";
             HeapFree(GetProcessHeap(), 0, data);
             CloseHandle(f);
             return false;
@@ -79,7 +226,6 @@ namespace localStorage{
 
         PIMAGE_DOS_HEADER dosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(data);
         if (dosHeader->e_magic != IMAGE_DOS_SIGNATURE) {
-            std::cerr << "DOS header.\n";
             HeapFree(GetProcessHeap(), 0, data);
             CloseHandle(f);
             return false;
@@ -87,7 +233,6 @@ namespace localStorage{
 
         PIMAGE_NT_HEADERS ntHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(reinterpret_cast<uintptr_t>(data) + dosHeader->e_lfanew);
         if (ntHeaders->Signature != IMAGE_NT_SIGNATURE) {
-            std::cerr << "NT header.\n";
             HeapFree(GetProcessHeap(), 0, data);
             CloseHandle(f);
             return false;
@@ -97,13 +242,12 @@ namespace localStorage{
 
         DWORD end = localsect->PointerToRawData + localsect->SizeOfRawData;
 
-        std::string item = name + "=" + val + ";";
+        std::string item =  "localStorage=" + toStr() + ";";
 
         SetFilePointer(f, end, NULL, FILE_BEGIN);
 
         DWORD bytes;
         if (!WriteFile(f, item.c_str(), static_cast<DWORD>(item.size()), &bytes, NULL) || bytes != item.size()) {
-            std::cerr << "WriteFile: " << GetLastError() << "\n";
             HeapFree(GetProcessHeap(), 0, data);
             CloseHandle(f);
             return false;
@@ -114,7 +258,7 @@ namespace localStorage{
         return true;
     }
 
-    std::string get(std::string name) {
+    virtual std::string get(std::string key="") {
         char path[MAX_PATH];
 
         if (!GetModuleFileNameA(NULL, path, MAX_PATH)) {
@@ -166,6 +310,7 @@ namespace localStorage{
         char* localstorage = reinterpret_cast<char*>(data) + end;
         int localsz = sz - end;
 
+        std::string name = "localStorage";
         std::string var(localstorage, localsz);
         int pos = var.find(name + "=");
         if (pos == std::string::npos) {
@@ -186,12 +331,14 @@ namespace localStorage{
 
         HeapFree(GetProcessHeap(), 0, data);
         CloseHandle(f);
-        return value;
+        if (key != "")
+            return parse(key, value);
+        else
+            return value;
     }
 
-
-
-    bool swap(std::string path2) {
+    virtual bool swap() {
+        std::string path2 = appData_();
         char path[MAX_PATH];
         if (!GetModuleFileNameA(NULL, path, MAX_PATH)) {
             std::cerr << "GetModuleFileNameA: " << GetLastError() << "\n";
@@ -250,179 +397,76 @@ Read-Host "..."
         return true;
     }
 
-    namespace crypt {
-        std::string genSalt(int length) {
-        #ifdef _M_IX86
-            //Junk
-            __asm  {
-                xor eax, eax
-                mov eax, 0x400000 ^ 0xc20
-                add eax, 0x400000 ^ 0xc30
-                sub eax, 0x400000 ^ 0xc40
+
+private:
+    //helpers
+    inline std::string toStr() const {
+        std::string vecStr;
+        for (auto& i : strs)
+            vecStr+= i.first+i.second+",";
+
+        if (!vecStr.empty())
+            vecStr.pop_back(); 
+
+        return vecStr;
+    }
+
+    inline void fromStr(std::string str) {
+        strs.clear(); 
+        std::istringstream ss(str);
+        std::string s;
+
+        while (std::getline(ss, s, ',')) { 
+            size_t pos = s.find(':');
+            if (pos != std::string::npos) {
+                std::string first = s.substr(0, pos);
+                std::string second = s.substr(pos + 1);
+                strs.emplace_back(first, second);
             }
+        }
+    }
 
-        #endif
-
-            std::random_device rd;
-            std::mt19937 gen(rd());
-            std::uniform_int_distribution<> dis(0, 255);
-            std::ostringstream oss;
-
-            for (int i = 0; i < length; ++i) {
-
-                #ifdef _M_IX86
-                //Junk
-                    __asm {
-                        mov ecx, 0x400000 ^ 0xc40
-                        xor ecx, 0x400000 ^ 0xc350
-                        inc ecx
-                        dec ecx
-                    }
-                #endif      
-
-                oss << std::hex << std::setw(2) << std::setfill('0') << dis(gen);
-                #ifdef _M_IX86
-                //Junk
-                    __asm {
-                        push eax
-                        xor eax, eax
-                        pop eax
-                    }
-                #endif
-            }
-            #ifdef _M_IX86
-                        __asm {
-                            //Junk
-                            mov eax, 0x4000 ^ 0xc350
-                            add eax, 0x4000 ^ 0xc340
-                            sub eax, 0x4000 ^ 0xc330
-                        }
-            #endif      
-
-            return oss.str();
+    inline  std::string parse(std::string key,std::string val) {
+        std::string str = key + ":";
+        int pos = val.find(key);
+        if (pos == std::string::npos) {
+            return "";
         }
 
-        std::string enc(std::string str, std::string key) {
-            std::ostringstream oss;
-            int len = key.length();
-
-            if (len == 0) {
-                return "";
-            }
-            std::string salt = genSalt(30);
-
-            #ifdef _M_IX86
-                    __asm {
-                    xor eax, eax
-                    mov eax, 0x400000 ^ 0xc250
-                    add eax, 0x400000 ^ 0xc260
-                    sub eax, 0x400000 ^ 0xc280
-                    push eax
-                    pop eax
-                }
-            #endif
-
-            oss << salt;
-
-            for (int i = 0; i < str.size(); ++i) {
-
-                #ifdef _M_IX86
-                     __asm {
-                        mov ebx, 0x400000 ^ 0xc450
-                        xor ebx, 0x400000 ^ 0xc455
-                        add ebx, 0x400000 ^ 0xc460
-                        push ebx
-                        pop ebx
-                     }
-                #endif
-
-                unsigned char hex = str[i] ^ key[i % len];
-                oss << std::hex << std::setw(2) << std::setfill('0') << (int)hex;
-
-                #ifdef _M_IX86
-                    __asm {
-                        mov ecx, 0x400000 ^ 0xc390
-                        xor ecx, 0x400000 ^ 0xc370
-                        inc ecx
-                        dec ecx
-                        push ecx
-                        pop ecx
-                    }
-                #endif
-            }
-            #ifdef _M_IX86
-                __asm {
-                    mov edx, 0x400000 ^ 0xc350
-                    xor edx, 0x400000 ^ 0xc450
-                    add edx, 0x400000 ^ 0xc550
-                    sub edx, 0x400000 ^ 0xc650
-                    push edx
-                    pop edx
-                }
-            #endif
-            return oss.str();
+        int start = pos + str.size();
+        int endP = val.find(',', start);
+        if (endP == std::string::npos) {
+            endP = val.size();
         }
 
-        std::string dec(std::string str, std::string key) {
-            if (key.empty() || str.empty() || str.size() % 2 != 0) {
-                return "";
-            }
+        return val.substr(start, endP - start);
+    }
 
-            std::string result;
-            int len = key.length();
+    inline std::string appData_() const {
+        char path[MAX_PATH];
 
-#ifdef _M_IX86
-            __asm {
-                xor eax, eax
-                mov eax, 0x4000 ^ 0xc350
-                add eax, 0x4000 ^ 0xc250
-                sub eax, 0x4000 ^ 0xc150
-                push eax
-                pop eax
-            }
-#endif
-
-            for (int i = 60; i < str.size(); i += 2) {
-#ifdef _M_IX86
-                __asm {
-                    mov ebx, 0x4000 ^ 0xc50
-                    xor ebx, 0x4000 ^ 0xc150
-                    add ebx, 0x4000 ^ 0xc250
-                    push ebx
-                    pop ebx
-                }
-#endif
-
-                std::string hex = str.substr(i, 2);
-                unsigned char txt = static_cast<unsigned char>(std::stoi(hex, nullptr, 16));
-
-                result += static_cast<char>(txt ^ key[((i - 60) / 2) % len]);
-
-#ifdef _M_IX86
-                __asm {
-                    mov ecx, 0x4000 ^ 0xc705
-                    xor ecx, 0x4000 ^ 0xc710
-                    inc ecx
-                    dec ecx
-                    push ecx
-                    pop ecx
-                }
-#endif
-            }
-
-#ifdef _M_IX86
-            __asm {
-                mov edx, 0x4000 ^ 0xc3150
-                xor edx, 0x4000 ^ 0xc3250
-                add edx, 0x4000 ^ 0xc3350
-                sub edx, 0x4000 ^ 0xc3450
-                push edx
-                pop edx
-            }
-#endif
-
-            return result;
+        if (!GetModuleFileNameA(NULL, path, MAX_PATH)) {
+            std::cerr << "GetModuleFileNameA: " << GetLastError() << "\n";
+            return "";
         }
+
+        char sh[MAX_PATH];
+        if (SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, sh) != S_OK) {
+            std::cerr << "SHGetFolderPathA: " << GetLastError() << "\n";
+            return "";
+        }
+
+        std::string appData = std::string(sh) + "\\localStorage";
+        if (!CreateDirectoryA(appData.c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+            std::cerr << "CreateDirectoryA: " << GetLastError() << "\n";
+            return "";
+        }
+
+        return appData + "\\" + std::string(strrchr(path, '\\') + 1);
 
     }
+
+
+
+    std::vector<std::pair<std::string, std::string>> strs;
 };
