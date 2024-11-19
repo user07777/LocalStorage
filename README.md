@@ -4,8 +4,9 @@ contem uma funcão de encriptação / decriptação padrão sendo ela um xor com
 também adicionei junkCode nessas funções , para não ser tão facil alguém extrair suas variaveis do binário
 #
 Primera execução
-![Screenshot_9](https://github.com/user-attachments/assets/cfe7396b-b394-4099-8225-694cf590bf1d)
+![image](https://github.com/user-attachments/assets/9e7b3edb-b13a-4e7b-99b9-e396c8fe4172)
+
 
 #
 Segunda execução já com os valores salvos.
-![Screenshot_10](https://github.com/user-attachments/assets/675c4076-0615-4e01-9428-d50472c70a88)
+![image](https://github.com/user-attachments/assets/4df5797b-9559-44fd-a08b-e8d5708e17e6)
