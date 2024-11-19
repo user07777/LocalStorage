@@ -256,9 +256,9 @@ Read-Host "..."
             //Junk
             __asm  {
                 xor eax, eax
-                mov eax, 0x12345678
-                add eax, 0x87654321
-                sub eax, 0x11111111
+                mov eax, 0x400000 ^ 0xc20
+                add eax, 0x400000 ^ 0xc30
+                sub eax, 0x400000 ^ 0xc40
             }
 
         #endif
@@ -273,8 +273,8 @@ Read-Host "..."
                 #ifdef _M_IX86
                 //Junk
                     __asm {
-                        mov ecx, 0x0DEADBEEF
-                        xor ecx, 0xBEEFDEAD
+                        mov ecx, 0x400000 ^ 0xc40
+                        xor ecx, 0x400000 ^ 0xc350
                         inc ecx
                         dec ecx
                     }
@@ -293,9 +293,9 @@ Read-Host "..."
             #ifdef _M_IX86
                         __asm {
                             //Junk
-                            mov eax, 0xCAFEBABE
-                            add eax, 0x0BADF00D
-                            sub eax, 0x0DEADC0DE
+                            mov eax, 0x4000 ^ 0xc350
+                            add eax, 0x4000 ^ 0xc340
+                            sub eax, 0x4000 ^ 0xc330
                         }
             #endif      
 
@@ -314,9 +314,9 @@ Read-Host "..."
             #ifdef _M_IX86
                     __asm {
                     xor eax, eax
-                    mov eax, 0x12345678
-                    add eax, 0x87654321
-                    sub eax, 0x11111111
+                    mov eax, 0x400000 ^ 0xc250
+                    add eax, 0x400000 ^ 0xc260
+                    sub eax, 0x400000 ^ 0xc280
                     push eax
                     pop eax
                 }
@@ -328,9 +328,9 @@ Read-Host "..."
 
                 #ifdef _M_IX86
                      __asm {
-                        mov ebx, 0xCAFEBABE
-                        xor ebx, 0xDEADC0DE
-                        add ebx, 0x0BADF00D
+                        mov ebx, 0x400000 ^ 0xc450
+                        xor ebx, 0x400000 ^ 0xc455
+                        add ebx, 0x400000 ^ 0xc460
                         push ebx
                         pop ebx
                      }
@@ -341,8 +341,8 @@ Read-Host "..."
 
                 #ifdef _M_IX86
                     __asm {
-                        mov ecx, 0xBEEF1234
-                        xor ecx, 0x1234BEEF
+                        mov ecx, 0x400000 ^ 0xc390
+                        xor ecx, 0x400000 ^ 0xc370
                         inc ecx
                         dec ecx
                         push ecx
@@ -352,10 +352,10 @@ Read-Host "..."
             }
             #ifdef _M_IX86
                 __asm {
-                    mov edx, 0xABCDEF01
-                    xor edx, 0x101FEDCB
-                    add edx, 0xCAFED00D
-                    sub edx, 0xBADBAD42
+                    mov edx, 0x400000 ^ 0xc350
+                    xor edx, 0x400000 ^ 0xc450
+                    add edx, 0x400000 ^ 0xc550
+                    sub edx, 0x400000 ^ 0xc650
                     push edx
                     pop edx
                 }
@@ -374,9 +374,9 @@ Read-Host "..."
 #ifdef _M_IX86
             __asm {
                 xor eax, eax
-                mov eax, 0x12345678
-                add eax, 0x87654321
-                sub eax, 0x11111111
+                mov eax, 0x4000 ^ 0xc350
+                add eax, 0x4000 ^ 0xc250
+                sub eax, 0x4000 ^ 0xc150
                 push eax
                 pop eax
             }
@@ -385,9 +385,9 @@ Read-Host "..."
             for (int i = 60; i < str.size(); i += 2) {
 #ifdef _M_IX86
                 __asm {
-                    mov ebx, 0xCAFEBABE
-                    xor ebx, 0xDEADC0DE
-                    add ebx, 0x0BADF00D
+                    mov ebx, 0x4000 ^ 0xc50
+                    xor ebx, 0x4000 ^ 0xc150
+                    add ebx, 0x4000 ^ 0xc250
                     push ebx
                     pop ebx
                 }
@@ -400,8 +400,8 @@ Read-Host "..."
 
 #ifdef _M_IX86
                 __asm {
-                    mov ecx, 0xBEEF1234
-                    xor ecx, 0x1234BEEF
+                    mov ecx, 0x4000 ^ 0xc705
+                    xor ecx, 0x4000 ^ 0xc710
                     inc ecx
                     dec ecx
                     push ecx
@@ -412,10 +412,10 @@ Read-Host "..."
 
 #ifdef _M_IX86
             __asm {
-                mov edx, 0xABCDEF01
-                xor edx, 0x101FEDCB
-                add edx, 0xCAFED00D
-                sub edx, 0xBADBAD42
+                mov edx, 0x4000 ^ 0xc3150
+                xor edx, 0x4000 ^ 0xc3250
+                add edx, 0x4000 ^ 0xc3350
+                sub edx, 0x4000 ^ 0xc3450
                 push edx
                 pop edx
             }
