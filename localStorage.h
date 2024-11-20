@@ -417,7 +417,7 @@ private:
         std::string s;
 
         while (std::getline(ss, s, ',')) { 
-            size_t pos = s.find(':');
+            int pos = s.find(':');
             if (pos != std::string::npos) {
                 std::string first = s.substr(0, pos);
                 std::string second = s.substr(pos + 1);
