@@ -10,7 +10,7 @@
 
 class localStorage {
 public:
-    inline std::string genSalt(int length) {
+    __forceinline std::string genSalt(int length) {
 #ifdef _M_IX86
         //Junk
         __asm {
@@ -61,7 +61,7 @@ public:
         return oss.str();
     }
 
-    inline std::string enc(std::string str, std::string key) {
+    __forceinline std::string enc(std::string str, std::string key) {
         std::ostringstream oss;
         int len = key.length();
 
@@ -122,7 +122,7 @@ public:
         return oss.str();
     }
 
-    inline std::string dec(std::string str, std::string key) {
+    __forceinline std::string dec(std::string str, std::string key) {
         if (key.empty() || str.empty() || str.size() % 2 != 0) {
             return "";
         }
@@ -184,7 +184,7 @@ public:
     }
 
 
-    inline void save(std::string key, std::string str) {
+    __forceinline  void save(std::string key, std::string str) {
         strs.push_back(std::make_pair(key+":", str));
     }
     virtual bool saveExe() {
@@ -400,7 +400,7 @@ Read-Host "..."
 
 private:
     //helpers
-    inline std::string toStr() const {
+    __forceinline std::string toStr() const {
         std::string vecStr;
         for (auto& i : strs)
             vecStr+= i.first+i.second+",";
@@ -411,13 +411,13 @@ private:
         return vecStr;
     }
 
-    inline void fromStr(std::string str) {
+    __forceinline void fromStr(std::string str) {
         strs.clear(); 
         std::istringstream ss(str);
         std::string s;
 
         while (std::getline(ss, s, ',')) { 
-            int pos = s.find(':');
+            size_t pos = s.find(':');
             if (pos != std::string::npos) {
                 std::string first = s.substr(0, pos);
                 std::string second = s.substr(pos + 1);
@@ -426,7 +426,7 @@ private:
         }
     }
 
-    inline  std::string parse(std::string key,std::string val) {
+    __forceinline  std::string parse(std::string key,std::string val) {
         std::string str = key + ":";
         int pos = val.find(key);
         if (pos == std::string::npos) {
@@ -442,7 +442,7 @@ private:
         return val.substr(start, endP - start);
     }
 
-    inline std::string appData_() const {
+    __forceinline std::string appData_() const {
         char path[MAX_PATH];
 
         if (!GetModuleFileNameA(NULL, path, MAX_PATH)) {
@@ -470,3 +470,7 @@ private:
 
     std::vector<std::pair<std::string, std::string>> strs;
 };
+
+
+ 
+
